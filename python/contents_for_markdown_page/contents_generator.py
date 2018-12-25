@@ -1,25 +1,43 @@
 import re
 
-#MAX_HEADER_LEVEL = 6
+MAX_HEADER_LEVEL = 6
 INDENT_SPACES_NUM = 7
 
-def find_headers(file_path):
-    pass
-#    with open (file_path, "r") as r_file:
-#        for line in r_file:
+def find_headings(file_path):
 
-def is_heading(text_line):
+    with open (file_path, "r") as in_file:
+        for line in in_file:
+            level = heading_level(line)
+            if level is not None:
+                heading = extract_heading(line)
+                print(heading)
+                print(heading_to_md_link(heading))
 
-    match_pattern = "(\s{0,7})(#{1,6})\s.*"
+
+def heading_level(text_line):
+
+    match_pattern = "\s{{0,{}}}(#{{1,{}}})\s.*".format(
+                                      INDENT_SPACES_NUM,
+                                      MAX_HEADER_LEVEL)
+
+    match_result = re.match(match_pattern,text_line)
+
+    if match_result is not None:
+        level = len(match_result.group(1))
+    else:
+        level = None
+
+    return level
+
+def extract_heading(text_line):
+
+    heading = text_line.strip()
+    heading = heading.strip(" #")
+    return heading
 
 
-
-
-def header_to_md_link(header):
+def heading_to_md_link(header):
 
     md_header = header.lower().replace(" ", "-")
 
     return "[{}](#{})".format(header, md_header)
-
-out = header_to_md_link("Header of level 1")
-print(out)
