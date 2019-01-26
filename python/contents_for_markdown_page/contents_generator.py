@@ -1,12 +1,44 @@
+"""
+Module docstring must be here.
+
+Next line with explanation.
+"""
 import re
+import sys
+import argparse
+import os
+
 
 MAX_HEADER_LEVEL = 6
 INDENT_SPACES_NUM = 7
 
 
-def find_headings(file_path):
+def parse_arguments():
+    """
+    Parse command line arguments.
+    """
+    parser = argparse.ArgumentParser(description="Create table of contents \
+                                        for the documnent written in Markdown")
 
-    with open(file_path, "r") as in_file:
+    parser.add_argument("infile", help="md file to be processed")
+    parser.add_argument("-l","--level", type=int, default=6,
+                        choices=range(1, MAX_HEADER_LEVEL+1),
+                        help="minimum level of heading to be inluded")
+    arg = parser.parse_args()
+    if os.path.isfile(arg.infile):
+        if not arg.infile.lower().endswith(".md"):
+            print(".md file expected")
+            sys.exit()
+    else:
+        print("File not found")
+        sys.exit()
+
+    return(arg)
+
+
+def find_headings(file_name):
+
+    with open(file_name, "r") as in_file:
         heading_level_lst = []
         for line in in_file:
             heading_level = extract_heading(line)
@@ -18,23 +50,19 @@ def find_headings(file_path):
 
 def extract_heading(text_line):
     """
-
-    :rtype: tuple
+    Function docstring
     """
-    match_pattern = "\s{{0,{}}}(#{{1,{}}})\s.*".format(
-                                      INDENT_SPACES_NUM,
-                                      MAX_HEADER_LEVEL)
-
+    match_pattern = "\s{{0,{}}}(#{{1,{}}})\s.*".format(INDENT_SPACES_NUM,
+                                                       MAX_HEADER_LEVEL)
     match_result = re.match(match_pattern, text_line)
-
     if match_result is None:
         return ()
-        
-    level = len(match_result.group(1))
-    heading = text_line.strip()
-    heading = heading.strip(" #")
-    
-    return (heading, level)
+
+    lev = len(match_result.group(1))
+    head = text_line.strip()
+    head = head.strip(" #")
+
+    return (head, lev)
 
 
 def heading_to_md_link(header):
@@ -46,18 +74,26 @@ def heading_to_md_link(header):
 
 if __name__ == '__main__':
 
-    file_path = "test_page.md"
-    headings_and_levels = find_headings(file_path)
+    args = parse_arguments()
+
+    headings_and_levels = find_headings(args.infile)
     if headings_and_levels:
         base_level = headings_and_levels[0][1]
 
-        for index in range(len(headings_and_levels)):
-            heading, level = headings_and_levels[index]
-            if index != 0:
-                pass
-            subheading_indent = (level-base_level) * 2 * " "
-            contents_item = subheading_indent +  "- " + heading_to_md_link(heading)
-            print(contents_item)
+        for index, (heading, level) in enumerate(headings_and_levels):
+            if level >= base_level:
+                previous_level = level
+                if index != 0:
+                    if level - previous_level > 1:
+                        print("Subheading can be only one level less")
+                        sys.exit()
+
+                subheading_indent = (level-base_level) * 2 * " "
+                contents_item = subheading_indent + "- " + heading_to_md_link(heading)
+                print(contents_item)
+            else:
+                print("Proceeding heading level is greater than the first one")
+                sys.exit()
 
     else:
         print("Headings have not been found")
