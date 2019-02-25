@@ -12,18 +12,24 @@ import os
 MAX_HEADER_LEVEL = 6
 INDENT_SPACES_NUM = 7
 
+# List of headers which are ignored and not included into table of contents
+# Headers i exception list are case insensitive
+EXCEPTION_LIST = [
+    "table of contents"
+]
+
 
 def parse_arguments():
     """
     Parse command line arguments.
     """
-    parser = argparse.ArgumentParser(description="Create table of contents \
-                                        for the documnent written in Markdown")
+    parser = argparse.ArgumentParser(description="Create table of contents "
+                                                 "for the document written in Markdown")
 
     parser.add_argument("infile", help="md file to be processed")
     parser.add_argument("-l","--level", type=int, default=6,
                         choices=range(1, MAX_HEADER_LEVEL+1),
-                        help="minimum level of heading to be inluded")
+                        help="minimum level of heading to be included")
     arg = parser.parse_args()
     if os.path.isfile(arg.infile):
         if not arg.infile.lower().endswith(".md"):
@@ -61,6 +67,8 @@ def extract_heading(text_line):
     lev = len(match_result.group(1))
     head = text_line.strip()
     head = head.strip(" #")
+    if head.lower() in EXCEPTION_LIST:
+        return()
 
     return (head, lev)
 
