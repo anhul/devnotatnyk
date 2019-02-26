@@ -80,29 +80,52 @@ def heading_to_md_link(header):
     return "[{}](#{})".format(header, md_header)
 
 
+def is_structure_valid(heading_level_lst):
+    """
+    Checks whether headings in the file are placed in an order which
+    makes it possible to generate valid Table Of Contents
+
+    :param heading_level_lst: list of tuples containing heading and level of
+                              the heading
+    :type list
+    :return: True or False
+    """
+    _, base_level = heading_level_lst[0]
+
+    for index, (heading, level) in enumerate(heading_level_lst):
+        if level >= base_level:
+            previous_level = level
+            if index != 0:
+                if level - previous_level > 1:
+                    print("Subheading can be only one level less")
+                    return False
+
+            subheading_indent = (level - base_level) * 2 * " "
+            contents_item = subheading_indent + "- " + heading_to_md_link(heading)
+            print(contents_item)
+        else:
+            print("Proceeding heading level is greater than the first one")
+            return False
+
+    return True
+
 if __name__ == '__main__':
 
     args = parse_arguments()
 
     headings_and_levels = find_headings(args.infile)
-    if headings_and_levels:
-        base_level = headings_and_levels[0][1]
-
-        for index, (heading, level) in enumerate(headings_and_levels):
-            if level >= base_level:
-                previous_level = level
-                if index != 0:
-                    if level - previous_level > 1:
-                        print("Subheading can be only one level less")
-                        sys.exit()
-
-                subheading_indent = (level-base_level) * 2 * " "
-                contents_item = subheading_indent + "- " + heading_to_md_link(heading)
-                print(contents_item)
-            else:
-                print("Proceeding heading level is greater than the first one")
-                sys.exit()
-
-    else:
+    if not headings_and_levels:
         print("Headings have not been found")
+        sys.exit()
+
+    if not is_structure_valid(headings_and_levels):
+        sys.exit()
+
+
+
+
+
+
+
+
 
