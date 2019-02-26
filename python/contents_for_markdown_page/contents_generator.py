@@ -13,7 +13,7 @@ MAX_HEADER_LEVEL = 6
 INDENT_SPACES_NUM = 7
 
 # List of headers which are ignored and not included into table of contents
-# Headers i exception list are case insensitive
+# Headers in exception list are case insensitive
 EXCEPTION_LIST = [
     "table of contents"
 ]
@@ -99,15 +99,37 @@ def is_structure_valid(heading_level_lst):
                 if level - previous_level > 1:
                     print("Subheading can be only one level less")
                     return False
-
-            subheading_indent = (level - base_level) * 2 * " "
-            contents_item = subheading_indent + "- " + heading_to_md_link(heading)
-            print(contents_item)
         else:
             print("Proceeding heading level is greater than the first one")
             return False
 
     return True
+
+def add_toc_to_file(file_name, heading_level_lst):
+    print(file_name)
+    print(os.path.dirname(file_name))
+    print(os.path.split(file_name))
+    print(os.path.abspath(file_name))
+    print(os.path.basename(file_name))
+    print(os.path.splitext(file_name))
+    f_name, f_ext = os.path.splitext(file_name)
+
+    with open(f_name + "_edit" + f_ext, "w") as updated_file:
+        with open(file_name, "r") as original_file:
+
+            updated_file.write("## Table Of Contents\n")
+
+            _, base_level = heading_level_lst[0]
+            for heading, level in heading_level_lst:
+                subheading_indent = (level - base_level) * 2 * " "
+                toc_item = subheading_indent + "- " + heading_to_md_link(heading) + "\n"
+                print(toc_item)
+                updated_file.write(toc_item)
+
+            for line in original_file:
+                updated_file.write(line)
+
+
 
 if __name__ == '__main__':
 
@@ -120,6 +142,8 @@ if __name__ == '__main__':
 
     if not is_structure_valid(headings_and_levels):
         sys.exit()
+
+    add_toc_to_file(args.infile, headings_and_levels)
 
 
 
