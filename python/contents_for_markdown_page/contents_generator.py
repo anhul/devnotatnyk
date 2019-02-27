@@ -18,6 +18,9 @@ EXCEPTION_LIST = [
     "table of contents"
 ]
 
+# Regular expression patterns
+TOC_ITEM_PTRN = " *[-\*] +\[(.+)\]\(#(.+)\)\s*"
+
 
 def parse_arguments():
     """
@@ -27,7 +30,7 @@ def parse_arguments():
                                                  "for the document written in Markdown")
 
     parser.add_argument("infile", help="md file to be processed")
-    parser.add_argument("-l","--level", type=int, default=6,
+    parser.add_argument("-l", "--level", type=int, default=6,
                         choices=range(1, MAX_HEADER_LEVEL+1),
                         help="minimum level of heading to be included")
     arg = parser.parse_args()
@@ -39,7 +42,7 @@ def parse_arguments():
         print("File not found")
         sys.exit()
 
-    return(arg)
+    return arg
 
 
 def find_headings(file_name):
@@ -105,6 +108,7 @@ def is_structure_valid(heading_level_lst):
 
     return True
 
+
 def add_toc_to_file(file_name, heading_level_lst):
     print(file_name)
     print(os.path.dirname(file_name))
@@ -127,8 +131,21 @@ def add_toc_to_file(file_name, heading_level_lst):
                 updated_file.write(toc_item)
 
             for line in original_file:
-                updated_file.write(line)
+                if not is_toc_item(line):
+                    updated_file.write(line)
 
+
+def is_toc_item(line):
+
+    match_result = re.match(TOC_ITEM_PTRN, line)
+    if match_result is None:
+        return False
+
+    toc_item_part1 = match_result.group(1).lower().split()
+    if "-".join(toc_item_part1) != match_result.group(2):
+        return False
+
+    return True
 
 
 if __name__ == '__main__':
